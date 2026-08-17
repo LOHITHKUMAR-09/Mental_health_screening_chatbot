@@ -1,0 +1,66 @@
+﻿# ── Python ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+env/
+ENV/
+
+# ── Environment ───────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+
+# ── Node / Frontend ───────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+build/
+*.tsbuildinfo
+
+# ── ML / Data ─────────────────────────────────────────────────────
+ml/data/raw/*
+ml/data/processed/*
+!ml/data/raw/.gitkeep
+!ml/data/processed/.gitkeep
+ml/models/*.pkl
+ml/models/*.joblib
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+*.onnx
+
+# ── Jupyter ───────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Database ──────────────────────────────────────────────────────
+*.sqlite3
+*.db
+postgres_data/
+
+# ── IDE ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ── Logs ─────────────────────────────────────────────────────────
+logs/
+*.log

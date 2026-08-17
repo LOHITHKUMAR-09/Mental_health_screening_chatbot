@@ -1,0 +1,30 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  @apply bg-slate-50 text-slate-800;
+}
+
+.chat-bubble-bot {
+  @apply bg-white border border-slate-200 rounded-chat rounded-tl-sm shadow-sm;
+}
+
+.chat-bubble-user {
+  @apply bg-primary-500 text-white rounded-chat rounded-tr-sm shadow-sm;
+}
+
+.risk-low {
+  @apply bg-calm-100 text-calm-600 border border-calm-400;
+}
+
+.risk-moderate {
+  @apply bg-amber-100 text-amber-700 border border-amber-400;
+}
+
+.risk-high {
+  @apply bg-crisis-100 text-crisis-700 border border-crisis-500;
+}
