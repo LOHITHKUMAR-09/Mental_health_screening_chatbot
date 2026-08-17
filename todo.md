@@ -33,26 +33,26 @@
 
 ## 🟠 PHASE 1: Project Setup and Infrastructure
 
-- [ ] Initialize monorepo folder structure
-  - [ ] rontend/
-  - [ ] ackend/
-  - [ ] ml/
-  - [ ] dashboard/
-  - [ ] docs/
-- [ ] Create .env.example with all required environment variables
-- [ ] Create docker-compose.yml with:
-  - [ ] PostgreSQL service
-  - [ ] Backend (FastAPI) service
-  - [ ] Frontend (React) service (optional for dev)
-  - [ ] pgAdmin or database viewer (optional)
-- [ ] Backend: Initialize FastAPI project with folder structure
-  - [ ] pp/api/, pp/core/, pp/models/, pp/screening/, pp/crisis/, pp/chatbot/
-  - [ ] Install and configure: fastapi, uvicorn, sqlalchemy, alembic, pydantic, python-jose, passlib
-- [ ] Frontend: Initialize React + TypeScript project with Tailwind CSS
-  - [ ] Install: react, typescript, tailwindcss, axios, react-router-dom, @chatscope/chat-ui-kit-react
-- [ ] ML: Initialize Python environment
-  - [ ] Install: scikit-learn, xgboost, lightgbm, pandas, numpy, shap, transformers, torch
-- [ ] Set up Git repository with .gitignore
+- [x] Initialize monorepo folder structure
+  - [x] frontend/
+  - [x] backend/
+  - [x] ml/
+  - [x] dashboard/
+  - [x] docs/
+- [x] Create .env.example with all required environment variables
+- [x] Create docker-compose.yml with:
+  - [x] PostgreSQL service
+  - [x] Backend (FastAPI) service
+  - [x] Frontend (React) service (optional for dev)
+  - [x] pgAdmin or database viewer (optional)
+- [x] Backend: Initialize FastAPI project with folder structure
+  - [x] app/api/, app/core/, app/models/, app/screening/, app/crisis/, app/chatbot/
+  - [x] Install and configure: fastapi, uvicorn, sqlalchemy, alembic, pydantic, python-jose, passlib
+- [x] Frontend: Initialize React + TypeScript project with Tailwind CSS
+  - [x] Install: react, typescript, tailwindcss, axios, react-router-dom, @chatscope/chat-ui-kit-react
+- [x] ML: Initialize Python environment
+  - [x] Install: scikit-learn, xgboost, lightgbm, pandas, numpy, shap, transformers, torch
+- [x] Set up Git repository with .gitignore
 
 ---
 
@@ -63,7 +63,8 @@
   - [ ] users table (id, email, password_hash, role, created_at, is_anonymous)
   - [ ] sessions table (id, user_id, started_at, ended_at, is_complete)
   - [ ] screening_responses table (id, session_id, instrument, item_number, response_value, timestamp)
-  - [ ] isk_scores table (id, session_id, phq9_score, gad7_score, pss10_score, composite_risk_level, ml_risk_label, shap_values_json)
+  - [ ] 
+isk_scores table (id, session_id, phq9_score, gad7_score, pss10_score, composite_risk_level, ml_risk_label, shap_values_json)
   - [ ] crisis_events table (id, session_id, trigger_type, timestamp, response_sent)
 - [ ] Write Alembic migrations for all tables
 - [ ] Test database connection and CRUD operations
@@ -109,7 +110,8 @@
 - [ ] Design and write the system prompt (empathic persona, guardrails, non-diagnostic clause)
 - [ ] Set up LangChain with chosen LLM provider (OpenAI or Groq)
 - [ ] Implement conversation state machine with LangGraph:
-  - [ ] State: greeting → consent → ackground → phq9_screening → gad7_screening → pss_screening → esults
+  - [ ] State: greeting → consent → background → phq9_screening → gad7_screening → pss_screening → 
+esults
   - [ ] State transitions triggered by questionnaire completion
 - [ ] Implement questionnaire injection into dialogue flow (conversational interleaving)
 - [ ] Store conversation history in memory + sync to DB
@@ -126,7 +128,7 @@
   - [ ] Hopelessness: "no hope", "nothing matters anymore" (as secondary signals)
 - [ ] Implement KeywordCrisisDetector class
   - [ ] Regex-based matching (case-insensitive, handles typos with fuzzy matching optional)
-  - [ ] Returns: is_crisis: bool, 	rigger_type: str, confidence: float
+  - [ ] Returns: is_crisis: bool, trigger_type: str, confidence: float
 - [ ] Implement CrisisResponder class
   - [ ] Hard-coded crisis response message template
   - [ ] Includes: iCall (9152987821), Vandrevala Foundation (1860-2662-345), campus contact placeholder
@@ -176,7 +178,8 @@
 ### API Integration
 - [ ] Create ML inference endpoint: POST /ml/predict
 - [ ] Load saved model in FastAPI startup
-- [ ] Return: isk_label, confidence, shap_values
+- [ ] Return: 
+isk_label, confidence, shap_values
 
 ---
 
@@ -249,7 +252,7 @@
 | Module | Status | % Done |
 |---|---|---|
 | Phase 0: Research + Planning | [ ] | 0% |
-| Phase 1: Project Setup | [ ] | 0% |
+| Phase 1: Project Setup | [x] | 100% |
 | Phase 2: Backend Core | [ ] | 0% |
 | Phase 3: Screening Engine | [ ] | 0% |
 | Phase 4: LLM Chatbot | [ ] | 0% |
@@ -257,4 +260,4 @@
 | Phase 6: ML Pipeline | [ ] | 0% |
 | Phase 7: Frontend | [ ] | 0% |
 | Phase 8: Review 1 Polish | [ ] | 0% |
-| **Overall** | **[ ]** | **0%** |
+| **Overall** | **[/]** | **~15%** |
