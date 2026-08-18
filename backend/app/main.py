@@ -1,4 +1,4 @@
-﻿"""
+"""
 MindEase — ML-Assisted Mental Health Screening Chatbot
 FastAPI Application Entry Point
 """
@@ -9,19 +9,23 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.api.v1.router import api_router
-from app.core.database import engine, Base
+from app.core.database import engine, Base, db_url
+
+# Import ALL models so SQLAlchemy registers them before create_all
+from app.models import user, session, screening_response, risk_score, crisis_event  # noqa: F401
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
-    # Startup: create tables if not using Alembic migrations yet
+    # Auto-create all tables (works for both SQLite and PostgreSQL)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print(f"✅ MindEase backend started — {settings.APP_NAME} v{settings.APP_VERSION}")
+    db_info = "SQLite (local dev)" if "sqlite" in db_url else "PostgreSQL"
+    print(f"[MindEase] Backend started | DB: {db_info} | API: http://localhost:8000/docs")
     yield
-    # Shutdown
-    print("🛑 MindEase backend shutting down.")
+    print("[MindEase] Backend shutting down.")
+
 
 
 app = FastAPI(

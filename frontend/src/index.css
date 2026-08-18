@@ -1,24 +1,23 @@
-﻿@tailwind base;
+﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 body {
   font-family: 'Inter', sans-serif;
-  @apply bg-slate-50 text-slate-800;
 }
 
 .chat-bubble-bot {
-  @apply bg-white border border-slate-200 rounded-chat rounded-tl-sm shadow-sm;
+  @apply bg-white border border-slate-200 rounded-[1.25rem] rounded-tl-sm shadow-sm;
 }
 
 .chat-bubble-user {
-  @apply bg-primary-500 text-white rounded-chat rounded-tr-sm shadow-sm;
+  @apply bg-sky-500 text-white rounded-[1.25rem] rounded-tr-sm shadow-sm;
 }
 
 .risk-low {
-  @apply bg-calm-100 text-calm-600 border border-calm-400;
+  @apply bg-green-100 text-green-700 border border-green-400;
 }
 
 .risk-moderate {
@@ -26,5 +25,5 @@ body {
 }
 
 .risk-high {
-  @apply bg-crisis-100 text-crisis-700 border border-crisis-500;
+  @apply bg-red-100 text-red-700 border border-red-500;
 }

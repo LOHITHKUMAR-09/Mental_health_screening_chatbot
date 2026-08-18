@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getResults } from '../api/chat'
 import type { SessionResults, RiskLevel } from '../types'
@@ -58,7 +58,7 @@ export default function ResultsPage() {
         </div>
 
         {/* Risk Level Card */}
-        <div className={${config.color} rounded-2xl p-6 text-center}>
+        <div className={`${config.color} rounded-2xl p-6 text-center`}>
           <div className="text-5xl mb-3">{config.emoji}</div>
           <h2 className="text-2xl font-bold">{config.label}</h2>
           <p className="mt-2 text-sm">{config.message}</p>
@@ -110,13 +110,13 @@ export default function ResultsPage() {
         )}
 
         {/* Counseling Resources */}
-        <div className="bg-primary-50 border border-primary-200 rounded-2xl p-6">
-          <h3 className="font-semibold text-primary-700 mb-2">🏥 University Counseling Center</h3>
-          <p className="text-sm text-primary-600">{results?.counselingResources?.name}</p>
-          <p className="text-sm text-primary-600">{results?.counselingResources?.phone}</p>
+        <div className="bg-sky-50 border border-sky-200 rounded-2xl p-6">
+          <h3 className="font-semibold text-sky-700 mb-2">🏥 University Counseling Center</h3>
+          <p className="text-sm text-sky-600">{results?.counselingResources?.name}</p>
+          <p className="text-sm text-sky-600">{results?.counselingResources?.phone}</p>
           <a
             href={results?.counselingResources?.bookingUrl || '#'}
-            className="mt-3 inline-block bg-primary-600 text-white text-sm font-semibold px-6 py-2 rounded-full hover:bg-primary-700 transition-all"
+            className="mt-3 inline-block bg-sky-600 text-white text-sm font-semibold px-6 py-2 rounded-full hover:bg-sky-700 transition-all"
           >
             Book Appointment →
           </a>
@@ -128,7 +128,7 @@ export default function ResultsPage() {
 
         <button
           onClick={() => navigate('/')}
-          className="w-full text-primary-600 underline text-sm"
+          className="w-full text-sky-600 underline text-sm"
         >
           Return to Home
         </button>
@@ -136,3 +136,4 @@ export default function ResultsPage() {
     </div>
   )
 }
+

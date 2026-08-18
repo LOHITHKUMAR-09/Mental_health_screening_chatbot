@@ -1,0 +1,64 @@
+{
+  "models": {
+    "Logistic Regression": {
+      "accuracy": 0.983,
+      "f1_macro": 0.9768
+    },
+    "Random Forest": {
+      "accuracy": 0.982,
+      "f1_macro": 0.9792
+    },
+    "XGBoost": {
+      "accuracy": 0.98,
+      "f1_macro": 0.9751
+    }
+  },
+  "best_model": "Random Forest",
+  "classes": [
+    "high",
+    "low",
+    "moderate"
+  ],
+  "feature_count": 39,
+  "features": [
+    "phq9_item_1",
+    "phq9_item_2",
+    "phq9_item_3",
+    "phq9_item_4",
+    "phq9_item_5",
+    "phq9_item_6",
+    "phq9_item_7",
+    "phq9_item_8",
+    "phq9_item_9",
+    "gad7_item_1",
+    "gad7_item_2",
+    "gad7_item_3",
+    "gad7_item_4",
+    "gad7_item_5",
+    "gad7_item_6",
+    "gad7_item_7",
+    "pss10_item_1",
+    "pss10_item_2",
+    "pss10_item_3",
+    "pss10_item_4",
+    "pss10_item_5",
+    "pss10_item_6",
+    "pss10_item_7",
+    "pss10_item_8",
+    "pss10_item_9",
+    "pss10_item_10",
+    "phq9_total",
+    "gad7_total",
+    "pss10_total",
+    "phq9_max_item",
+    "gad7_max_item",
+    "phq9_severe_items",
+    "gad7_severe_items",
+    "phq9_variance",
+    "gad7_variance",
+    "phq9_item9_suicidal",
+    "time_of_day_bin",
+    "is_returning_user",
+    "session_number"
+  ]
+}

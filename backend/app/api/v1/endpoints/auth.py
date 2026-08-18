@@ -1,7 +1,8 @@
-﻿"""Authentication endpoints — register, login, anonymous session."""
+"""Authentication endpoints — register, login, anonymous session."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 import uuid
@@ -39,41 +40,63 @@ class TokenResponse(BaseModel):
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(data: RegisterRequest, db: AsyncSession = Depends(get_db)):
     """Register a new student account."""
-    # TODO: Check if email already exists
-    # TODO: Create user in DB
-    # TODO: Return JWT token
-    return {
-        "access_token": "stub_token",
-        "token_type": "bearer",
-        "user_id": str(uuid.uuid4()),
-        "role": "student",
-        "is_anonymous": False,
-    }
+    result = await db.execute(select(User).where(User.email == data.email))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user = User(
+        email=data.email,
+        password_hash=get_password_hash(data.password),
+        role="student",
+        is_anonymous=False,
+        full_name=data.full_name,
+        year_of_study=data.year_of_study,
+        major=data.major,
+    )
+    db.add(user)
+    await db.flush()
+
+    token = create_access_token(data={"sub": str(user.id), "role": "student"})
+    return TokenResponse(
+        access_token=token,
+        user_id=str(user.id),
+        role="student",
+        is_anonymous=False,
+    )
 
 
 @router.post("/login", response_model=TokenResponse)
 async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
     """Login with email and password."""
-    # TODO: Query user, verify password, return JWT
-    return {
-        "access_token": "stub_token",
-        "token_type": "bearer",
-        "user_id": str(uuid.uuid4()),
-        "role": "student",
-        "is_anonymous": False,
-    }
+    result = await db.execute(select(User).where(User.email == data.email))
+    user = result.scalar_one_or_none()
+    if not user or not verify_password(data.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    token = create_access_token(data={"sub": str(user.id), "role": user.role})
+    return TokenResponse(
+        access_token=token,
+        user_id=str(user.id),
+        role=user.role,
+        is_anonymous=False,
+    )
 
 
 @router.post("/anonymous", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def create_anonymous_session(db: AsyncSession = Depends(get_db)):
     """Create an anonymous user session (no email required)."""
-    anon_id = uuid.uuid4()
-    # TODO: Create anonymous user in DB
-    token = create_access_token(data={"sub": str(anon_id), "role": "student", "anon": True})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user_id": str(anon_id),
-        "role": "student",
-        "is_anonymous": True,
-    }
+    user = User(
+        role="student",
+        is_anonymous=True,
+    )
+    db.add(user)
+    await db.flush()
+
+    token = create_access_token(data={"sub": str(user.id), "role": "student", "anon": True})
+    return TokenResponse(
+        access_token=token,
+        user_id=str(user.id),
+        role="student",
+        is_anonymous=True,
+    )
+

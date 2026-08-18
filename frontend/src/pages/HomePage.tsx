@@ -10,11 +10,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary-50 to-white px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-sky-50 to-white px-4">
       {/* Logo / Title */}
       <div className="text-center mb-10">
         <div className="text-5xl mb-4">🧠</div>
-        <h1 className="text-4xl font-bold text-primary-700">MindEase</h1>
+        <h1 className="text-4xl font-bold text-sky-700">MindEase</h1>
         <p className="text-slate-500 mt-2 text-lg">Mental Health Screening Chatbot for University Students</p>
       </div>
 
@@ -42,13 +42,13 @@ export default function HomePage() {
       <div className="flex gap-4">
         <button
           onClick={handleStart}
-          className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-full shadow-md transition-all"
+          className="bg-sky-600 hover:bg-sky-700 text-white font-semibold px-8 py-3 rounded-full shadow-md transition-all"
         >
           Start Screening (Anonymous)
         </button>
         <button
           onClick={() => navigate('/login')}
-          className="border border-primary-600 text-primary-600 hover:bg-primary-50 font-semibold px-8 py-3 rounded-full transition-all"
+          className="border border-sky-600 text-sky-600 hover:bg-sky-50 font-semibold px-8 py-3 rounded-full transition-all"
         >
           Sign In
         </button>
@@ -56,3 +56,4 @@ export default function HomePage() {
     </div>
   )
 }
+

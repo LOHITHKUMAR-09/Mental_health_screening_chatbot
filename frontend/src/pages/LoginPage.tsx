@@ -13,7 +13,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-primary-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-sky-50 px-4">
       <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <div className="text-4xl mb-2">🧠</div>
@@ -27,18 +27,18 @@ export default function LoginPage() {
             placeholder="University Email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+            className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+            className="w-full border border-slate-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
           <button
             type="submit"
-            className="w-full bg-primary-600 text-white font-semibold py-3 rounded-xl hover:bg-primary-700 transition-all"
+            className="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl hover:bg-sky-700 transition-all"
           >
             Sign In
           </button>
@@ -46,7 +46,7 @@ export default function LoginPage() {
 
         <p className="text-center text-slate-400 text-sm mt-4">
           Or{' '}
-          <button onClick={() => navigate('/')} className="text-primary-600 underline">
+          <button onClick={() => navigate('/')} className="text-sky-600 underline">
             continue anonymously
           </button>
         </p>
@@ -54,3 +54,4 @@ export default function LoginPage() {
     </div>
   )
 }
+
