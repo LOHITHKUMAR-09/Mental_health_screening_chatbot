@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react'
+﻿import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startSession, sendMessage } from '../api/chat'
-import type { Message, ChatMessageResponse } from '../types'
+import type { Message } from '../types'
 
 export default function ChatPage() {
   const navigate = useNavigate()
@@ -11,18 +11,12 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false)
   const [isCrisis, setIsCrisis] = useState(false)
   const [consentGiven, setConsentGiven] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Auto-scroll to bottom
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
-
-  const initSession = async () => {
-    const session = await startSession()
-    setSessionId(session.session_id)
-    addBotMessage("Hello! I'm MindEase 🧠 — your mental health companion. I'll guide you through a brief, confidential screening. Everything shared here is private. Are you ready to begin?")
-  }
 
   const addBotMessage = (content: string) => {
     setMessages(prev => [...prev, {
@@ -33,31 +27,50 @@ export default function ChatPage() {
     }])
   }
 
-  const handleSend = async () => {
-    if (!inputText.trim() || !sessionId) return
+  const initSession = async () => {
+    try {
+      setError(null)
+      const session = await startSession()
+      setSessionId(session.session_id)
+      addBotMessage(
+        "Hello! I'm MindEase 🧠\n\nI'm here to guide you through a brief, confidential mental health check-in covering mood, anxiety, and stress.\n\nType anything to begin — I'll walk you through each step."
+      )
+    } catch (err) {
+      setError('Could not connect to the server. Please make sure the backend is running on port 8000.')
+      console.error('Session init error:', err)
+    }
+  }
 
-    const userMsg: Message = {
+  const handleSend = async () => {
+    if (!inputText.trim() || !sessionId || isTyping) return
+
+    const userText = inputText.trim()
+    setMessages(prev => [...prev, {
       id: crypto.randomUUID(),
       sender: 'user',
-      content: inputText,
+      content: userText,
       timestamp: new Date(),
-    }
-    setMessages(prev => [...prev, userMsg])
+    }])
     setInputText('')
     setIsTyping(true)
+    setError(null)
 
     try {
-      const response: ChatMessageResponse = await sendMessage(sessionId, inputText)
-      
-      if (response.isCrisis) {
+      const response = await sendMessage(sessionId, userText)
+
+      if (response.is_crisis) {
         setIsCrisis(true)
       }
 
-      addBotMessage(response.botMessage)
+      addBotMessage(response.bot_message)
 
-      if (response.currentState === 'results') {
-        setTimeout(() => navigate(/results/), 2000)
+      if (response.current_state === 'results') {
+        setTimeout(() => navigate(`/results/${sessionId}`), 2500)
       }
+    } catch (err: any) {
+      const msg = err?.response?.data?.detail || err?.message || 'Something went wrong.'
+      addBotMessage(`⚠️ Sorry, I encountered an error: ${msg}\n\nPlease try again.`)
+      console.error('Send message error:', err)
     } finally {
       setIsTyping(false)
     }
@@ -70,18 +83,29 @@ export default function ChatPage() {
     }
   }
 
+  // ── Consent Screen ──────────────────────────────────────────────
   if (!consentGiven) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-sky-50 px-4">
         <div className="bg-white rounded-2xl shadow-md p-8 max-w-lg w-full">
-          <h2 className="text-xl font-bold text-slate-700 mb-4">🔒 Before We Begin</h2>
-          <div className="text-slate-600 text-sm space-y-3 mb-6">
+          <div className="text-center mb-4">
+            <div className="text-4xl mb-2">🧠</div>
+            <h2 className="text-xl font-bold text-slate-700">Before We Begin</h2>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4 text-slate-600 text-sm space-y-2 mb-6">
             <p>✅ MindEase is a <strong>screening tool only</strong> — not a diagnostic service.</p>
-            <p>✅ Your responses are <strong>encrypted and anonymized</strong>.</p>
-            <p>✅ No personal data is shared without your explicit consent.</p>
-            <p>✅ If you experience a mental health crisis, you will be given <strong>emergency resources immediately</strong>.</p>
+            <p>✅ Your responses are <strong>private and stored securely</strong>.</p>
+            <p>✅ No personal data is shared without your consent.</p>
+            <p>✅ Crisis support is provided <strong>immediately</strong> if needed.</p>
             <p>✅ This tool does <strong>not replace</strong> professional mental health care.</p>
           </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-300 text-red-700 text-sm rounded-xl px-4 py-3 mb-4">
+              {error}
+            </div>
+          )}
+
           <button
             onClick={() => { setConsentGiven(true); initSession() }}
             className="w-full bg-sky-600 text-white font-semibold py-3 rounded-xl hover:bg-sky-700 transition-all"
@@ -93,6 +117,7 @@ export default function ChatPage() {
     )
   }
 
+  // ── Chat Screen ─────────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Header */}
@@ -102,30 +127,47 @@ export default function ChatPage() {
           <h1 className="font-semibold text-slate-700">MindEase</h1>
           <p className="text-xs text-slate-400">Confidential Mental Health Screening</p>
         </div>
-        <div className="ml-auto text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full font-medium">
-          🔒 Private Session
+        <div className="ml-auto text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+          🔒 Private
         </div>
       </header>
 
-      {/* Disclaimer Banner */}
+      {/* Disclaimer */}
       <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-xs text-amber-700 text-center">
-        ⚠️ This is a screening tool, not a diagnosis. Not a substitute for professional care.
+        ⚠️ Screening tool only — not a clinical diagnosis. Not a substitute for professional care.
       </div>
 
-      {/* Crisis Alert */}
+      {/* Crisis banner */}
       {isCrisis && (
-        <div className="bg-red-100 border border-red-500 px-4 py-3 text-red-700 text-sm font-medium text-center">
-          🆘 Crisis resources have been shared below. Please reach out to <strong>iCall: 9152987821</strong> right away.
+        <div className="bg-red-50 border-b border-red-400 px-4 py-3 text-red-700 text-sm font-medium text-center">
+          🆘 Please reach out to <strong>iCall: 9152987821</strong> (Mon–Sat, 8am–10pm) right away.
         </div>
       )}
 
-      {/* Chat Messages */}
+      {/* Error banner */}
+      {error && (
+        <div className="bg-orange-50 border-b border-orange-300 px-4 py-2 text-orange-700 text-xs text-center">
+          {error}
+        </div>
+      )}
+
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 max-w-2xl mx-auto w-full">
+        {messages.length === 0 && (
+          <div className="text-center text-slate-400 text-sm mt-10">
+            Starting your session...
+          </div>
+        )}
+
         {messages.map(msg => (
           <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            {msg.sender === 'bot' && <div className="text-xl mr-2 mt-1">🤖</div>}
+            {msg.sender === 'bot' && (
+              <div className="text-xl mr-2 mt-1 flex-shrink-0">🤖</div>
+            )}
             <div
-              className={`max-w-xs md:max-w-md px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${msg.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'}`}
+              className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                msg.sender === 'user' ? 'chat-bubble-user' : 'chat-bubble-bot'
+              }`}
             >
               {msg.content}
             </div>
@@ -134,7 +176,7 @@ export default function ChatPage() {
 
         {isTyping && (
           <div className="flex justify-start">
-            <div className="text-xl mr-2">🤖</div>
+            <div className="text-xl mr-2 flex-shrink-0">🤖</div>
             <div className="chat-bubble-bot px-4 py-3 text-sm text-slate-400 italic">
               MindEase is typing...
             </div>
@@ -143,27 +185,30 @@ export default function ChatPage() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="bg-white border-t border-slate-200 px-4 py-3 max-w-2xl mx-auto w-full">
-        <div className="flex gap-2">
+      {/* Input */}
+      <div className="bg-white border-t border-slate-200 px-4 py-3">
+        <div className="max-w-2xl mx-auto flex gap-2">
           <textarea
             value={inputText}
             onChange={e => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message... (Enter to send)"
+            placeholder={sessionId ? 'Type your reply... (Enter to send)' : 'Connecting...'}
             rows={1}
-            className="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-sky-400"
+            disabled={!sessionId || isTyping}
+            className="flex-1 border border-slate-300 rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-sky-400 disabled:bg-slate-50 disabled:text-slate-400"
           />
           <button
             onClick={handleSend}
-            disabled={!inputText.trim() || isTyping}
-            className="bg-sky-600 hover:bg-sky-700 disabled:opacity-40 text-white px-5 rounded-xl font-semibold text-sm transition-all"
+            disabled={!inputText.trim() || isTyping || !sessionId}
+            className="bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 rounded-xl font-semibold text-sm transition-all"
           >
             Send
           </button>
         </div>
+        <p className="text-center text-xs text-slate-400 mt-2">
+          Press <kbd className="bg-slate-100 px-1 rounded">Enter</kbd> to send · <kbd className="bg-slate-100 px-1 rounded">Shift+Enter</kbd> for new line
+        </p>
       </div>
     </div>
   )
 }
-
