@@ -1,4 +1,4 @@
-﻿"""
+"""
 ML Training Pipeline — MindEase Mental Health Risk Classifier
 Trains and evaluates multiple models, saves best model + SHAP values.
 """
@@ -24,14 +24,16 @@ import shap
 
 # Paths
 BASE = Path(__file__).parent
-DATA_PATH  = BASE / "data" / "synthetic" / "synthetic_dataset.csv"
+# Real dataset: 39,648 participants from OpenPsychometrics DASS-42 survey
+# Mapped from DASS-42 subscales to PHQ-9/GAD-7/PSS-10 feature schema
+REAL_DATA_PATH      = BASE / "data" / "processed" / "real_dataset.csv"
+SYNTHETIC_DATA_PATH = BASE / "data" / "synthetic" / "synthetic_dataset.csv"
+DATA_PATH = REAL_DATA_PATH if REAL_DATA_PATH.exists() else SYNTHETIC_DATA_PATH
 MODELS_DIR = BASE / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 
-# ── Step 1: Generate data if not exists ──────────────────────────
-if not DATA_PATH.exists():
-    print("Generating synthetic dataset...")
-    exec(open(BASE / "data" / "generate_synthetic.py").read())
+# ── Step 1: Load data ─────────────────────────────────────────────
+print(f"[Dataset] Using: {DATA_PATH.name}")
 
 print(f"Loading data from {DATA_PATH}")
 df = pd.read_csv(DATA_PATH)
@@ -79,7 +81,7 @@ models = {
         ("scaler", StandardScaler()),
         ("clf", xgb.XGBClassifier(
             n_estimators=200, max_depth=6, learning_rate=0.1,
-            use_label_encoder=False, eval_metric="mlogloss",
+            eval_metric="mlogloss",
             random_state=42,
         )),
     ]),
@@ -111,9 +113,8 @@ print(f"\nBest model: {best_name}")
 best_pipeline = models[best_name]
 best_pipeline.fit(X, y)
 
-# Save best model
 joblib.dump(best_pipeline, MODELS_DIR / "best_model.pkl")
-print(f"Saved best model → {MODELS_DIR / 'best_model.pkl'}")
+print(f"Saved best model -> {MODELS_DIR / 'best_model.pkl'}")
 
 # ── Step 6: Full classification report ────────────────────────────
 y_pred = best_pipeline.predict(X)
@@ -130,23 +131,39 @@ X_scaled = xgb_pipeline.named_steps["scaler"].transform(X)
 explainer = shap.TreeExplainer(xgb_pipeline.named_steps["clf"])
 shap_values = explainer.shap_values(X_scaled)
 
-# Feature importance from SHAP (mean absolute SHAP values)
-if isinstance(shap_values, list):
-    mean_shap = np.abs(np.array(shap_values)).mean(axis=0).mean(axis=0)
+# Feature importance from SHAP (mean absolute SHAP values per class, averaged)
+raw_shap = explainer.shap_values(X_scaled)
+# raw_shap can be: list of arrays [n_samples, n_features] x n_classes, or 3D array
+if isinstance(raw_shap, list):
+    # list of 2D arrays -> stack to 3D [n_classes, n_samples, n_features]
+    shap_3d = np.array(raw_shap)  # shape: (n_classes, n_samples, n_features)
+    mean_shap_per_class = np.abs(shap_3d).mean(axis=1)  # (n_classes, n_features)
+    mean_shap = mean_shap_per_class.mean(axis=0)        # (n_features,)
+elif raw_shap.ndim == 3:
+    # 3D array [n_samples, n_features, n_classes]
+    mean_shap = np.abs(raw_shap).mean(axis=0).mean(axis=1)  # (n_features,)
 else:
-    mean_shap = np.abs(shap_values).mean(axis=0)
+    mean_shap = np.abs(raw_shap).mean(axis=0)
+
+# Store per-class SHAP lists for the predictor (one list per feature)
+if isinstance(raw_shap, list):
+    shap_per_class_dict = {}
+    for feat_idx, feat_name in enumerate(FEATURE_COLS):
+        per_class_means = [float(np.abs(raw_shap[cls][:, feat_idx]).mean()) for cls in range(len(raw_shap))]
+        shap_per_class_dict[feat_name] = per_class_means
+else:
+    shap_per_class_dict = {feat: [float(mean_shap[i])] * 3 for i, feat in enumerate(FEATURE_COLS)}
 
 feature_importance = dict(zip(FEATURE_COLS, mean_shap.tolist()))
 sorted_importance = dict(sorted(feature_importance.items(), key=lambda x: x[1], reverse=True))
 
 print("\n--- Top 10 Most Important Features (SHAP) ---")
 for feat, val in list(sorted_importance.items())[:10]:
-    bar = "█" * int(val * 20)
-    print(f"  {feat:30s}  {val:.4f}  {bar}")
+    print(f"  {feat:30s}  {val:.4f}")
 
-# Save SHAP feature importance
+# Save SHAP feature importance (per-class lists — matches predictor.py format)
 with open(MODELS_DIR / "shap_feature_importance.json", "w") as f:
-    json.dump(sorted_importance, f, indent=2)
+    json.dump(shap_per_class_dict, f, indent=2)
 
 # Save evaluation results
 eval_results = {
