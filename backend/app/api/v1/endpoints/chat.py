@@ -1,4 +1,4 @@
-﻿"""
+"""
 Chat endpoint - full pipeline with persistent message history & SSE streaming:
   1. Crisis detection (keyword regex - BYPASSES LLM)
   2. Likert response parsing (questionnaire states)
@@ -179,7 +179,9 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
 
     elif current_state == "consent":
         msg_lower = data.message.lower()
-        if any(w in msg_lower for w in ["yes", "agree", "ok", "sure", "accept", "ready", "understand", "begin", "start", "i do", "yep", "yeah"]):
+        if any(w in msg_lower for w in ["yes", "agree", "ok", "sure", "accept", "ready", "understand",
+                                         "begin", "start", "i do", "yep", "yeah", "consent",
+                                         "participate", "absolutely", "alright", "proceed"]):
             sess.current_state = "background"
             current_state = "background"
 

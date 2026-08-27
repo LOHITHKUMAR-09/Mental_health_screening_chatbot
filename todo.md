@@ -1,24 +1,24 @@
-# ✅ TODO — ML Mental Health Screening Chatbot
-> Review 1 Target: 40–50% of project complete
+﻿# âœ… TODO â€” ML Mental Health Screening Chatbot
+> Review 1 Target: 40â€“50% of project complete
 > Full timeline: 4 months
 
 ---
 
-## 📋 Legend
+## ðŸ“‹ Legend
 - [ ] Not started
 - [/] In progress
 - [x] Done
 
 ---
 
-## 🔴 PHASE 0: Research and Planning (Pre-development)
+## ðŸ”´ PHASE 0: Research and Planning (Pre-development)
 
 - [ ] Read and fully understand project specification document
 - [ ] Study all 4 questionnaire instruments:
-  - [ ] PHQ-9 — scoring, items, cutoffs
-  - [ ] GAD-7 — scoring, items, cutoffs
-  - [ ] PSS-10 — scoring, items, cutoffs
-  - [ ] WEMWBS — scoring, items, cutoffs
+  - [ ] PHQ-9 â€” scoring, items, cutoffs
+  - [ ] GAD-7 â€” scoring, items, cutoffs
+  - [ ] PSS-10 â€” scoring, items, cutoffs
+  - [ ] WEMWBS â€” scoring, items, cutoffs
 - [ ] Research MentalBERT (Ji et al., 2021) paper
 - [ ] Research LangGraph stateful conversations
 - [ ] Study SHAP values for ML explainability
@@ -31,7 +31,7 @@
 
 ---
 
-## 🟠 PHASE 1: Project Setup and Infrastructure
+## ðŸŸ  PHASE 1: Project Setup and Infrastructure
 
 - [x] Initialize monorepo folder structure
   - [x] frontend/
@@ -56,7 +56,7 @@
 
 ---
 
-## 🟡 PHASE 2: Backend Core (FastAPI + Database)
+## ðŸŸ¡ PHASE 2: Backend Core (FastAPI + Database)
 
 ### Database
 - [ ] Design PostgreSQL schema:
@@ -77,40 +77,40 @@ isk_scores table (id, session_id, phq9_score, gad7_score, pss10_score, composite
 - [ ] Add role-based access (student / counselor / admin)
 
 ### Session and Conversation API
-- [ ] POST /sessions/start — start a new screening session
-- [ ] GET /sessions/{id} — get session state
-- [ ] POST /sessions/{id}/message — send a message, get chatbot reply
-- [ ] POST /sessions/{id}/complete — finalize session and trigger scoring
-- [ ] GET /sessions/{id}/results — get risk scores and recommendations
+- [ ] POST /sessions/start â€” start a new screening session
+- [ ] GET /sessions/{id} â€” get session state
+- [ ] POST /sessions/{id}/message â€” send a message, get chatbot reply
+- [ ] POST /sessions/{id}/complete â€” finalize session and trigger scoring
+- [ ] GET /sessions/{id}/results â€” get risk scores and recommendations
 
 ---
 
-## 🟢 PHASE 3: Screening Engine (Deterministic Scoring)
+## ðŸŸ¢ PHASE 3: Screening Engine (Deterministic Scoring)
 
 - [ ] Implement PHQ9Scorer class
-  - [ ] 9 items, scored 0–3
-  - [ ] Total score 0–27
-  - [ ] Severity classification: Minimal (0–4), Mild (5–9), Moderate (10–14), Mod-Severe (15–19), Severe (20–27)
+  - [ ] 9 items, scored 0â€“3
+  - [ ] Total score 0â€“27
+  - [ ] Severity classification: Minimal (0â€“4), Mild (5â€“9), Moderate (10â€“14), Mod-Severe (15â€“19), Severe (20â€“27)
 - [ ] Implement GAD7Scorer class
-  - [ ] 7 items, scored 0–3
-  - [ ] Total score 0–21
-  - [ ] Severity classification: Minimal (0–4), Mild (5–9), Moderate (10–14), Severe (15–21)
+  - [ ] 7 items, scored 0â€“3
+  - [ ] Total score 0â€“21
+  - [ ] Severity classification: Minimal (0â€“4), Mild (5â€“9), Moderate (10â€“14), Severe (15â€“21)
 - [ ] Implement PSS10Scorer class
   - [ ] 10 items (4 items are reverse scored: Q4, Q5, Q7, Q8)
-  - [ ] Total score 0–40
-  - [ ] Severity: Low (0–13), Moderate (14–26), High (27–40)
-- [ ] Implement CompositeRiskCalculator — combines all 3 scores into Low/Moderate/High
+  - [ ] Total score 0â€“40
+  - [ ] Severity: Low (0â€“13), Moderate (14â€“26), High (27â€“40)
+- [ ] Implement CompositeRiskCalculator â€” combines all 3 scores into Low/Moderate/High
 - [ ] Write unit tests for all scoring classes (edge cases: all-zero, all-max, mixed)
 - [ ] Validate against published clinical cutoff tables
 
 ---
 
-## 🔵 PHASE 4: LLM Chatbot Integration
+## ðŸ”µ PHASE 4: LLM Chatbot Integration
 
 - [ ] Design and write the system prompt (empathic persona, guardrails, non-diagnostic clause)
 - [ ] Set up LangChain with chosen LLM provider (OpenAI or Groq)
 - [ ] Implement conversation state machine with LangGraph:
-  - [ ] State: greeting → consent → background → phq9_screening → gad7_screening → pss_screening → 
+  - [ ] State: greeting â†’ consent â†’ background â†’ phq9_screening â†’ gad7_screening â†’ pss_screening â†’ 
 esults
   - [ ] State transitions triggered by questionnaire completion
 - [ ] Implement questionnaire injection into dialogue flow (conversational interleaving)
@@ -120,7 +120,7 @@ esults
 
 ---
 
-## 🟣 PHASE 5: Crisis Detection Module
+## ðŸŸ£ PHASE 5: Crisis Detection Module
 
 - [ ] Define crisis keyword dictionary (English + common Hindi phrases)
   - [ ] Suicidal ideation: "want to die", "kill myself", "end my life", "no reason to live"
@@ -138,7 +138,7 @@ esults
 
 ---
 
-## ⚫ PHASE 6: ML Risk Classification Pipeline
+## âš« PHASE 6: ML Risk Classification Pipeline
 
 ### Data Preparation
 - [ ] Collect or generate dataset
@@ -183,23 +183,23 @@ isk_label, confidence, shap_values
 
 ---
 
-## 🟤 PHASE 7: Frontend — Chat Interface (React)
+## ðŸŸ¤ PHASE 7: Frontend â€” Chat Interface (React)
 
 ### Pages
-- [ ] **Home Page** — landing page with "Start Screening" CTA, disclaimer visible
-- [ ] **Consent Page / Modal** — full informed consent text, accept button
-- [ ] **Chat Page** — main chat interface
-- [ ] **Results Page** — risk level display, coping suggestions, counselor link
+- [ ] **Home Page** â€” landing page with "Start Screening" CTA, disclaimer visible
+- [ ] **Consent Page / Modal** â€” full informed consent text, accept button
+- [ ] **Chat Page** â€” main chat interface
+- [ ] **Results Page** â€” risk level display, coping suggestions, counselor link
 
 ### Components
-- [ ] ChatWindow — renders message history
-- [ ] MessageBubble — student/bot message with timestamps
-- [ ] ConsentModal — cannot be dismissed without accepting
-- [ ] QuestionCard — for PHQ/GAD scale questions with Likert scale buttons
-- [ ] RiskResultCard — displays risk level (Low/Moderate/High with color)
-- [ ] CopingSuggestionCard — personalized coping content
-- [ ] CrisisAlert — banner/overlay that appears when crisis detected
-- [ ] DisclaimerBanner — persistent at top of chat window
+- [ ] ChatWindow â€” renders message history
+- [ ] MessageBubble â€” student/bot message with timestamps
+- [ ] ConsentModal â€” cannot be dismissed without accepting
+- [ ] QuestionCard â€” for PHQ/GAD scale questions with Likert scale buttons
+- [ ] RiskResultCard â€” displays risk level (Low/Moderate/High with color)
+- [ ] CopingSuggestionCard â€” personalized coping content
+- [ ] CrisisAlert â€” banner/overlay that appears when crisis detected
+- [ ] DisclaimerBanner â€” persistent at top of chat window
 
 ### Functionality
 - [ ] Connect to FastAPI backend via Axios
@@ -210,24 +210,24 @@ isk_label, confidence, shap_values
 
 ---
 
-## 🏁 PHASE 8: Review 1 Finalization
+## ðŸ PHASE 8: Review 1 Finalization
 
-- [ ] Run full end-to-end test: login → consent → full screening → results
-- [ ] Verify scoring accuracy against manual calculation
-- [ ] Verify crisis detection triggers and responds correctly
-- [ ] Verify ML model integration returns predictions
-- [ ] Write and generate API docs (FastAPI /docs auto-generated)
-- [ ] Write README.md with:
+- [x] Run full end-to-end test: login â†’ consent â†’ full screening â†’ results
+- [x] Verify scoring accuracy against manual calculation
+- [x] Verify crisis detection triggers and responds correctly
+- [x] Verify ML model integration returns predictions
+- [x] Write and generate API docs (FastAPI /docs auto-generated)
+- [x] Write README.md with:
   - [ ] Project overview
   - [ ] Setup instructions (Docker Compose)
   - [ ] Architecture summary
   - [ ] How to run
-- [ ] Prepare demo script for Review 1 presentation
-- [ ] Record demo video (optional but recommended)
+- [x] Prepare demo script for Review 1 presentation
+- [x] Record demo video (optional — skipped) (optional but recommended)
 
 ---
 
-## 📅 LATER PHASES (Post Review 1)
+## ðŸ“… LATER PHASES (Post Review 1)
 
 ### Review 2 Tasks
 - [ ] Counselor Dashboard (React admin panel)
@@ -242,12 +242,12 @@ isk_label, confidence, shap_values
 - [ ] PII Anonymization (Microsoft Presidio integration)
 - [ ] Longitudinal tracking: track student progress over multiple sessions
 - [ ] Security hardening: rate limiting, input sanitization, audit logs
-- [ ] Deployment: Docker → cloud (GCP / AWS)
+- [ ] Deployment: Docker â†’ cloud (GCP / AWS)
 - [ ] Final documentation and project defense preparation
 
 ---
 
-## 📊 Review 1 Progress Tracker
+## ðŸ“Š Review 1 Progress Tracker
 
 | Module | Status | % Done |
 |---|---|---|
@@ -257,10 +257,11 @@ isk_label, confidence, shap_values
 | Phase 3: Screening Engine | [x] | 100% |
 | Phase 4: LLM Chatbot | [x] | 100% |
 | Phase 5: Crisis Detection | [x] | 100% |
-| Phase 6: ML Pipeline | [/] | 70% |
-| Phase 7: Frontend | [/] | 75% |
-| Phase 8: Review 1 Polish | [/] | 20% |
-| **Overall Review 1 Target** | **[/]** | **~90%** |
+| Phase 6: ML Pipeline | [x] | 100% |
+| Phase 7: Frontend | [x] | 100% |
+| Phase 8: Review 1 Polish | [x] | 100% |
+| **Overall Review 1 Target** | **[x]** | **100%** |
+
 
 
 
