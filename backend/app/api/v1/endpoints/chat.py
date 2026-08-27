@@ -203,7 +203,16 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
     # 6. Generate bot response
     if clarification_needed and pending_item:
         bot_message = get_clarification_response(pending_item)
+    elif current_state in ("phq9", "gad7", "pss10") and pending_item:
+        # Clinical questionnaire states: ALWAYS deliver exact, authoritative question text & Likert scale
+        bot_message = get_scripted_response(
+            current_state=current_state,
+            user_message=data.message,
+            responses=all_responses,
+            pending_item=pending_item,
+        )
     else:
+        # Conversational states (greeting, consent, background, results): use empathic LLM
         bot_message = await _get_llm_response(
             user_message=data.message,
             history=data.conversation_history or [],
