@@ -173,22 +173,29 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
                 clarification_needed = True
 
     # 5. Non-questionnaire state transitions
+    response_state = current_state
+    if current_state in ("phq9", "gad7", "pss10"):
+        pass  # Handled above
     elif current_state == "greeting":
         sess.current_state = "consent"
-        current_state = "consent"
+        response_state = "greeting"
 
     elif current_state == "consent":
-        msg_lower = data.message.lower()
-        if any(w in msg_lower for w in ["yes", "agree", "ok", "sure", "accept", "ready", "understand",
-                                         "begin", "start", "i do", "yep", "yeah", "consent",
-                                         "participate", "absolutely", "alright", "proceed"]):
+        from app.chatbot.scripted_responses import is_explicit_refusal
+        msg_lower = data.message.lower().strip()
+        if is_explicit_refusal(msg_lower):
+            sess.current_state = "consent"
+            response_state = "consent_declined"
+        else:
             sess.current_state = "background"
             current_state = "background"
+            response_state = "consent"
 
     elif current_state == "background":
         sess.current_state = "phq9"
         current_state = "phq9"
         pending_item = get_next_question("phq9", {})
+        response_state = "background"
 
     if current_state == "results" and not sess.is_complete:
         sess.is_complete = True
@@ -206,7 +213,7 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
         )
         if not bot_message:
             bot_message = get_scripted_response(
-                current_state=current_state,
+                current_state=response_state,
                 user_message=data.message,
                 responses=all_responses,
                 pending_item=pending_item,

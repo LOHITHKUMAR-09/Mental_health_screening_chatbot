@@ -1,4 +1,4 @@
-﻿"""
+"""
 Scripted / Rule-Based Chatbot Responses.
 
 Works WITHOUT any LLM API key.
@@ -8,6 +8,18 @@ Used as the primary response engine (LLM is optional enhancement).
 
 from typing import Optional, Dict
 from app.chatbot.screening_flow import get_next_question, INSTRUMENT_CONFIG
+
+
+import re
+
+def is_explicit_refusal(msg_lower: str) -> bool:
+    """Check if the user is explicitly declining or canceling."""
+    # Exclude common non-refusal phrases first
+    false_positives = ["nothing", "not much", "not really", "not bad", "not at all", "no problem", "no worries", "no stress"]
+    if any(fp in msg_lower for fp in false_positives):
+        return False
+    refusal_patterns = [r"\bno\b", r"\bnope\b", r"\bcancel\b", r"\bstop\b", r"\bquit\b", r"\bexit\b", r"\bdon'?t\b"]
+    return any(re.search(pat, msg_lower) for pat in refusal_patterns)
 
 
 def get_scripted_response(
@@ -29,11 +41,11 @@ def get_scripted_response(
             "It takes about 8-10 minutes and covers three areas: mood, anxiety, and stress.\n\n"
             "Before we begin, please note: this is a screening tool only — not a diagnosis. "
             "Everything you share stays private.\n\n"
-            "Are you ready to begin? (Yes / No)"
+            "Are you ready to begin? (Type 'Yes' to start)"
         )
 
-    elif current_state == "consent":
-        if any(w in msg_lower for w in ["no", "nope", "not", "cancel", "stop"]):
+    elif current_state in ("consent", "consent_declined"):
+        if is_explicit_refusal(msg_lower):
             return (
                 "That's completely okay. You can come back whenever you feel ready. "
                 "If you ever need support, remember iCall is always available: 9152987821. 💙"

@@ -1,4 +1,4 @@
-﻿"""Application configuration using Pydantic Settings."""
+"""Application configuration using Pydantic Settings."""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o"
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "llama3-8b-8192"
+    GROQ_MODEL: str = "openai/gpt-oss-20b"
     LLM_TEMPERATURE: float = 0.5
     LLM_MAX_TOKENS: int = 512
 
