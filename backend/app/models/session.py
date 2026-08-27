@@ -1,4 +1,4 @@
-﻿"""Session model — a single screening interaction."""
+﻿"""ScreeningSession model - a single screening interaction."""
 
 import uuid
 from datetime import datetime, timezone
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
 
-class Session(Base):
+class ScreeningSession(Base):
     __tablename__ = "sessions"
 
     id: Mapped[str] = mapped_column(
@@ -19,10 +19,11 @@ class Session(Base):
     current_state: Mapped[str]   = mapped_column(String(50), default="greeting")
     is_complete: Mapped[bool]    = mapped_column(Boolean, default=False)
     session_number: Mapped[int]  = mapped_column(Integer, default=1)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    ended_at: Mapped[datetime]   = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    ended_at: Mapped[datetime]   = mapped_column(DateTime(timezone=True), nullable=True)
 
-    user: Mapped["User"]                              = relationship("User", back_populates="sessions")  # noqa: F821
-    screening_responses: Mapped[list["ScreeningResponse"]] = relationship("ScreeningResponse", back_populates="session")  # noqa: F821
-    risk_score: Mapped["RiskScore"]                   = relationship("RiskScore", back_populates="session", uselist=False)  # noqa: F821
-    crisis_events: Mapped[list["CrisisEvent"]]        = relationship("CrisisEvent", back_populates="session")  # noqa: F821
+    user: Mapped["User"]                                   = relationship("User", back_populates="sessions")
+    screening_responses: Mapped[list["ScreeningResponse"]] = relationship("ScreeningResponse", back_populates="session")
+    risk_score: Mapped["RiskScore"]                        = relationship("RiskScore", back_populates="session", uselist=False)
+    crisis_events: Mapped[list["CrisisEvent"]]             = relationship("CrisisEvent", back_populates="session")
+    messages: Mapped[list["ChatMessage"]]                  = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")

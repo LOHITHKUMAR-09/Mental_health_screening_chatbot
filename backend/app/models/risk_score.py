@@ -1,4 +1,4 @@
-﻿"""RiskScore model — computed scores per session."""
+﻿"""RiskScore model - computed scores per session."""
 
 import uuid
 from datetime import datetime, timezone
@@ -22,10 +22,10 @@ class RiskScore(Base):
     gad7_severity: Mapped[str]    = mapped_column(String(30), nullable=True)
     pss10_score: Mapped[int]      = mapped_column(Integer, nullable=True)
     pss10_severity: Mapped[str]   = mapped_column(String(30), nullable=True)
-    rule_based_risk: Mapped[str]  = mapped_column(String(20), nullable=True)   # low | moderate | high
+    rule_based_risk: Mapped[str]  = mapped_column(String(20), nullable=True)
     ml_risk_label: Mapped[str]    = mapped_column(String(20), nullable=True)
     ml_confidence: Mapped[float]  = mapped_column(Float, nullable=True)
-    shap_values: Mapped[str]      = mapped_column(Text, nullable=True)         # JSON string
-    computed_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+    shap_values: Mapped[str]      = mapped_column(Text, nullable=True)
+    computed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    session: Mapped["Session"] = relationship("Session", back_populates="risk_score")  # noqa: F821
+    session: Mapped["ScreeningSession"] = relationship("ScreeningSession", back_populates="risk_score")

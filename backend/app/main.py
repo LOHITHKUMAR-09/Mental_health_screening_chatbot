@@ -9,22 +9,22 @@ from contextlib import asynccontextmanager
 
 from app.core.config import settings
 from app.api.v1.router import api_router
-from app.core.database import engine, Base, db_url
+from app.core.database import engine, Base
 
 # Import ALL models so SQLAlchemy registers them before create_all
-from app.models import user, session, screening_response, risk_score, crisis_event  # noqa: F401
+from app.models import user, session, screening_response, risk_score, crisis_event, message  # noqa: F401
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
-    # Auto-create all tables (works for both SQLite and PostgreSQL)
+    # Auto-create all tables against PostgreSQL
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    db_info = "SQLite (local dev)" if "sqlite" in db_url else "PostgreSQL"
-    print(f"[MindEase] Backend started | DB: {db_info} | API: http://localhost:8000/docs")
+    print("[MindEase] Backend started | DB: PostgreSQL | API: http://localhost:8000/docs")
     yield
     print("[MindEase] Backend shutting down.")
+
 
 
 

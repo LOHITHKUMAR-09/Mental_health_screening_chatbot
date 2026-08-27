@@ -1,21 +1,16 @@
 ﻿"""
-Conversation Engine — LangChain-powered chatbot with stateful session management.
-Handles the full screening flow: greeting → consent → background → PHQ-9 → GAD-7 → PSS-10 → results.
+Conversation Engine - LangChain-powered chatbot with stateful session management.
+Handles the full screening flow: greeting -> consent -> background -> PHQ-9 -> GAD-7 -> PSS-10 -> results.
+Supports both non-streaming and async streaming responses.
 """
 
 from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, AsyncGenerator
 
 from app.core.config import settings
 from app.chatbot.system_prompt import MINDEASE_SYSTEM_PROMPT
-from app.chatbot.screening_flow import (
-    get_next_question,
-    parse_likert_response,
-    SCREENING_FLOW,
-)
 
 
 def get_llm():
@@ -38,7 +33,7 @@ def get_llm():
 
 class ConversationEngine:
     """
-    Manages a single chat session with the LLM.
+    Manages chat sessions with the LLM.
     Maintains conversation history and drives the screening state machine.
     """
 
@@ -58,10 +53,32 @@ class ConversationEngine:
             if pending_item:
                 lines.append(f"\nYou MUST ask EXACTLY this question next (do NOT rephrase the meaning, you may make it conversational):")
                 lines.append(f"Question {pending_item['item_number']}: {pending_item['question']}")
-                lines.append(f"Scale: {pending_item['options_str']}")
+                lines.append(f"Scale options: {pending_item['options_str']}")
                 lines.append(f"After asking, WAIT for the user's response. Do NOT guess their answer.")
 
         return "\n".join(lines)
+
+    def _build_messages(
+        self,
+        user_message: str,
+        conversation_history: List[Dict],
+        current_state: str,
+        responses: Dict,
+        pending_item: Optional[Dict] = None,
+    ) -> List[Any]:
+        state_context = self.build_state_context(current_state, responses, pending_item)
+        full_system = MINDEASE_SYSTEM_PROMPT + state_context
+
+        messages = [SystemMessage(content=full_system)]
+
+        for msg in conversation_history[-12:]:
+            if msg.get("role") == "user" or msg.get("sender") == "user":
+                messages.append(HumanMessage(content=msg.get("content", "")))
+            else:
+                messages.append(AIMessage(content=msg.get("content", "")))
+
+        messages.append(HumanMessage(content=user_message))
+        return messages
 
     async def generate_response(
         self,
@@ -71,36 +88,23 @@ class ConversationEngine:
         responses: Dict,
         pending_item: Optional[Dict] = None,
     ) -> str:
-        """
-        Generate the bot's next response using the LLM.
-
-        Args:
-            user_message: The latest user input.
-            conversation_history: List of {role: user|assistant, content: str} dicts.
-            current_state: Current screening state machine state.
-            responses: Dict of collected screening responses so far.
-            pending_item: Next questionnaire item to ask, if any.
-
-        Returns:
-            The bot's response string.
-        """
-        state_context = self.build_state_context(current_state, responses, pending_item)
-        full_system = MINDEASE_SYSTEM_PROMPT + state_context
-
-        messages = [SystemMessage(content=full_system)]
-
-        # Add conversation history
-        for msg in conversation_history[-12:]:  # Keep last 12 turns for context
-            if msg["role"] == "user":
-                messages.append(HumanMessage(content=msg["content"]))
-            else:
-                messages.append(AIMessage(content=msg["content"]))
-
-        # Add current user message
-        messages.append(HumanMessage(content=user_message))
-
+        """Generate full response synchronously."""
+        messages = self._build_messages(user_message, conversation_history, current_state, responses, pending_item)
         response = await self.llm.ainvoke(messages)
         return response.content
+
+    async def generate_response_stream(
+        self,
+        user_message: str,
+        conversation_history: List[Dict],
+        current_state: str,
+        responses: Dict,
+        pending_item: Optional[Dict] = None,
+    ) -> AsyncGenerator[str, None]:
+        """Stream response chunks asynchronously."""
+        messages = self._build_messages(user_message, conversation_history, current_state, responses, pending_item)
+        async for chunk in self.llm.astream(messages):
+            yield chunk.content
 
 
 # Module-level singleton

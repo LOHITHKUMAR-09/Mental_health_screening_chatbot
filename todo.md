@@ -1,4 +1,4 @@
-﻿# ✅ TODO — ML Mental Health Screening Chatbot
+# ✅ TODO — ML Mental Health Screening Chatbot
 > Review 1 Target: 40–50% of project complete
 > Full timeline: 4 months
 
@@ -251,14 +251,16 @@ isk_label, confidence, shap_values
 
 | Module | Status | % Done |
 |---|---|---|
-| Phase 0: Research + Planning | [ ] | 0% |
+| Phase 0: Research + Planning | [x] | 100% |
 | Phase 1: Project Setup | [x] | 100% |
-| Phase 2: Backend Core | [ ] | 0% |
-| Phase 3: Screening Engine | [ ] | 0% |
-| Phase 4: LLM Chatbot | [ ] | 0% |
-| Phase 5: Crisis Detection | [ ] | 0% |
-| Phase 6: ML Pipeline | [ ] | 0% |
-| Phase 7: Frontend | [ ] | 0% |
-| Phase 8: Review 1 Polish | [ ] | 0% |
-| **Overall** | **[/]** | **~15%** |
+| Phase 2: Backend Core | [x] | 100% |
+| Phase 3: Screening Engine | [x] | 100% |
+| Phase 4: LLM Chatbot | [x] | 100% |
+| Phase 5: Crisis Detection | [x] | 100% |
+| Phase 6: ML Pipeline | [/] | 70% |
+| Phase 7: Frontend | [/] | 75% |
+| Phase 8: Review 1 Polish | [/] | 20% |
+| **Overall Review 1 Target** | **[/]** | **~90%** |
+
+
 
