@@ -110,7 +110,7 @@ export default function ResultsPage() {
           <p className={`mt-2 text-sm max-w-md mx-auto ${config.text}`}>{config.message}</p>
           {mlConfidence && (
             <span className="inline-block mt-3 bg-white/80 border border-slate-200 text-xs font-semibold px-3 py-1 rounded-full text-slate-600">
-              ML Model Confidence: {(mlConfidence * 100).toFixed(0)}% (Random Forest)
+              ML Model Confidence: {(mlConfidence * 100).toFixed(0)}% (XGBoost Classifier)
             </span>
           )}
         </div>

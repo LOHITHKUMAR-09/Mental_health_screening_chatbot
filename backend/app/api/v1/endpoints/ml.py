@@ -20,7 +20,7 @@ class MLPredictResponse(BaseModel):
     confidence: float
     top_feature_importance: Dict[str, float]
     shap_features: Dict[str, float]       # alias so both field names work
-    model_name: str = "Random Forest (Clinical Screening)"
+    model_name: str = "XGBoost Classifier (91.1% CV Accuracy)"
 
 
 @router.post("/predict", response_model=MLPredictResponse)
