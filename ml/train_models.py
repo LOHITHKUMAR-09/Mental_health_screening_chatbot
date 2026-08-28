@@ -20,6 +20,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.metrics import classification_report, confusion_matrix
 import xgboost as xgb
+import lightgbm as lgb
 import shap
 
 # Paths
@@ -66,8 +67,6 @@ print(f"Classes: {le.classes_}")
 joblib.dump(le, MODELS_DIR / "label_encoder.pkl")
 
 # ── Step 3: Define models ──────────────────────────────────────────
-scaler = StandardScaler()
-
 models = {
     "Logistic Regression": Pipeline([
         ("scaler", StandardScaler()),
@@ -76,6 +75,10 @@ models = {
     "Random Forest": Pipeline([
         ("scaler", StandardScaler()),
         ("clf", RandomForestClassifier(n_estimators=200, class_weight="balanced", random_state=42)),
+    ]),
+    "LightGBM": Pipeline([
+        ("scaler", StandardScaler()),
+        ("clf", lgb.LGBMClassifier(n_estimators=200, learning_rate=0.1, random_state=42, verbose=-1)),
     ]),
     "XGBoost": Pipeline([
         ("scaler", StandardScaler()),
@@ -104,11 +107,11 @@ for name, pipeline in models.items():
     acc = cv_results["test_accuracy"].mean()
     f1  = cv_results["test_f1_macro"].mean()
     results[name] = {"accuracy": acc, "f1_macro": f1}
-    print(f"{name:25s}  Accuracy={acc:.4f}  F1-Macro={f1:.4f}")
+    print(f"{name:25s}  Accuracy={acc*100:.2f}%  F1-Macro={f1:.4f}")
 
 # ── Step 5: Train best model on full data ─────────────────────────
 best_name = max(results, key=lambda k: results[k]["f1_macro"])
-print(f"\nBest model: {best_name}")
+print(f"\n🏆 Best model selected: {best_name} ({results[best_name]['accuracy']*100:.2f}% Accuracy)")
 
 best_pipeline = models[best_name]
 best_pipeline.fit(X, y)
@@ -121,15 +124,11 @@ y_pred = best_pipeline.predict(X)
 print("\n--- Classification Report (Training Set) ---")
 print(classification_report(y, y_pred, target_names=le.classes_))
 
-# ── Step 7: SHAP analysis on XGBoost ──────────────────────────────
-print("\nComputing SHAP values...")
-xgb_pipeline = models["XGBoost"]
-xgb_pipeline.fit(X, y)
-
-# SHAP explainer on the raw XGBoost classifier
-X_scaled = xgb_pipeline.named_steps["scaler"].transform(X)
-explainer = shap.TreeExplainer(xgb_pipeline.named_steps["clf"])
-shap_values = explainer.shap_values(X_scaled)
+# ── Step 7: SHAP analysis on best model ───────────────────────────
+print(f"\nComputing SHAP values on best model ({best_name})...")
+X_scaled = best_pipeline.named_steps["scaler"].transform(X)
+explainer = shap.TreeExplainer(best_pipeline.named_steps["clf"])
+raw_shap = explainer.shap_values(X_scaled)
 
 # Feature importance from SHAP (mean absolute SHAP values per class, averaged)
 raw_shap = explainer.shap_values(X_scaled)

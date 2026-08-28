@@ -38,7 +38,7 @@ def add_code(code):
 
 # ── 1. Title & Introduction ──────────────────────────────────────────────────
 add_md("""# 🌿 MindEase: ML-Assisted Mental Health Risk Classification Pipeline
-### *From Raw OpenPsychometrics DASS-42 Survey to Explainable XGBoost Classifier (SHAP)*
+### *From Raw OpenPsychometrics DASS-42 Survey to Explainable Gradient Boosted Classifier (SHAP)*
 
 ---
 **Project Overview:**
@@ -49,8 +49,9 @@ MindEase is a conversational mental health screening assistant for university st
 4. **Target Risk Derivation:** Labels ground-truth triage categories (`low`, `moderate`, `high`) using validated clinical cutoffs.
 5. **Exploratory Data Analysis (EDA):** Visualizes score distributions, comorbidity patterns, and correlation matrices.
 6. **Multi-Model Benchmark:** Evaluates Logistic Regression, Random Forest, LightGBM, and XGBoost under **5-Fold Stratified Cross-Validation**.
-7. **Explainable AI (SHAP):** Calculates TreeExplainer feature importance and generates beeswarm/summary plots.
-8. **Artifact Export:** Exports `best_model.pkl`, `label_encoder.pkl`, and `shap_feature_importance.json` for live production API serving.
+7. **Automated Best Model Selection:** Dynamically selects and trains the top-performing model.
+8. **Explainable AI (SHAP):** Calculates TreeExplainer feature importance and generates beeswarm/summary plots.
+9. **Artifact Export:** Exports `best_model.pkl`, `label_encoder.pkl`, and `shap_feature_importance.json` for live production API serving.
 """)
 
 # ── 2. Environment Setup ─────────────────────────────────────────────────────
@@ -290,8 +291,8 @@ add_md("""## 6. Multi-Model Training & 5-Fold Stratified Cross-Validation
 We evaluate 4 machine learning models using **Stratified 5-Fold Cross-Validation** to select the best performer:
 1. **Logistic Regression** (L2 Regularized Baseline)
 2. **Random Forest Classifier** (200 trees, balanced weights)
-3. **LightGBM Classifier** (Gradient Boosting)
-4. **XGBoost Classifier** (200 estimators, max_depth=6, learning_rate=0.1)
+3. **LightGBM Classifier** (Gradient Boosting with histogram binning)
+4. **XGBoost Classifier** (Gradient Boosting with exact splits)
 """)
 
 add_code("""# Prepare Features (X) and Target (y)
@@ -338,14 +339,14 @@ for name, pipeline in models.items():
 
 print("="*65)
 
-# Select Best Model
+# Dynamically Select Best Model
 best_name = max(results, key=lambda k: results[k]['f1_macro'])
-print(f"🏆 Best Selected Model: {best_name} ({results[best_name]['accuracy']*100:.2f}% Accuracy)")
+print(f"🏆 Best Selected Model: {best_name} ({results[best_name]['accuracy']*100:.2f}% Accuracy, Macro-F1: {results[best_name]['f1_macro']:.4f})")
 """)
 
-# ── 8. Model Evaluation & ROC Curves ─────────────────────────────────────────
-add_md("""## 7. In-Depth Evaluation of the Winning Model (XGBoost)
-We train the winning XGBoost pipeline on a train/test split to plot the Confusion Matrix and Multi-Class ROC curves.
+# ── 8. Dynamic Best Model Evaluation & ROC Curves ────────────────────────────
+add_md("""## 7. In-Depth Evaluation of the Winning Champion Model
+We train the winning pipeline (`best_name`) on an 80/20 stratified split and generate the Confusion Matrix and Multi-Class ROC curves.
 """)
 
 add_code("""# Train/Test Split (80/20)
@@ -357,7 +358,7 @@ y_pred = best_pipeline.predict(X_test)
 y_proba = best_pipeline.predict_proba(X_test)
 
 # Classification Report
-print("📊 Detailed Classification Report (Test Set):\\n")
+print(f"📊 Detailed Classification Report for Winning Model ({best_name}) on Test Set:\\n")
 print(classification_report(y_test, y_pred, target_names=le.classes_))
 
 # ── Confusion Matrix & Multi-Class ROC Curves ─────────────────────────────────
@@ -366,7 +367,7 @@ fig, axes = plt.subplots(1, 2, figsize=(15, 6))
 # 1. Confusion Matrix
 cm = confusion_matrix(y_test, y_pred)
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=le.classes_, yticklabels=le.classes_, ax=axes[0])
-axes[0].set_title("Confusion Matrix (XGBoost)", fontsize=13, fontweight='bold')
+axes[0].set_title(f"Confusion Matrix ({best_name})", fontsize=13, fontweight='bold')
 axes[0].set_xlabel("Predicted Label")
 axes[0].set_ylabel("True Label")
 
@@ -378,7 +379,7 @@ for i, class_name in enumerate(le.classes_):
     axes[1].plot(fpr, tpr, lw=2, label=f'{class_name.capitalize()} (AUC = {roc_auc:.3f})')
 
 axes[1].plot([0, 1], [0, 1], 'k--', lw=1.5)
-axes[1].set_title("Multi-Class ROC Curves", fontsize=13, fontweight='bold')
+axes[1].set_title(f"Multi-Class ROC Curves ({best_name})", fontsize=13, fontweight='bold')
 axes[1].set_xlabel("False Positive Rate")
 axes[1].set_ylabel("True Positive Rate")
 axes[1].legend(loc="lower right")
@@ -389,10 +390,10 @@ plt.show()
 
 # ── 9. Explainable AI (SHAP) ─────────────────────────────────────────────────
 add_md("""## 8. Explainable AI (XAI) with SHAP (SHapley Additive exPlanations)
-To avoid black-box predictions in clinical healthcare, we compute **TreeExplainer SHAP values** to understand exactly how symptoms drive risk predictions.
+To avoid black-box predictions in clinical healthcare, we compute **TreeExplainer SHAP values** on the winning model to understand symptom contributions.
 """)
 
-add_code("""# Initialize TreeExplainer on trained XGBoost model
+add_code("""# Initialize TreeExplainer on the winning model
 scaler = best_pipeline.named_steps["scaler"]
 clf = best_pipeline.named_steps["clf"]
 
@@ -403,23 +404,24 @@ shap_values = explainer.shap_values(X_test_scaled)
 # 1. Global Feature Importance Bar Plot
 plt.figure(figsize=(10, 6))
 shap.summary_plot(shap_values, X_test, feature_names=FEATURE_COLS, class_names=le.classes_, plot_type="bar", show=False)
-plt.title("Top 15 Global Feature Importances (SHAP)", fontsize=13, fontweight='bold')
+plt.title(f"Top 15 Global Feature Importances via SHAP ({best_name})", fontsize=13, fontweight='bold')
 plt.show()
 
 # 2. SHAP Beeswarm Plot for High-Risk Class
 class_idx = list(le.classes_).index('high')
 plt.figure(figsize=(10, 6))
-shap.summary_plot(shap_values[class_idx], X_test, feature_names=FEATURE_COLS, show=False)
-plt.title("SHAP Feature Impact on HIGH Risk Prediction", fontsize=13, fontweight='bold')
+shap_high = shap_values[class_idx] if isinstance(shap_values, list) else shap_values[:, :, class_idx]
+shap.summary_plot(shap_high, X_test, feature_names=FEATURE_COLS, show=False)
+plt.title(f"SHAP Feature Impact on HIGH Risk Prediction ({best_name})", fontsize=13, fontweight='bold')
 plt.show()
 """)
 
 # ── 10. Local Sample Simulation & Artifact Export ────────────────────────────
 add_md("""## 9. Simulated Student Screening & Artifact Export
-We test inference on a simulated student profile and export the serialized model artifacts for deployment in MindEase.
+We train the winning model on the full dataset and export the serialized artifacts for deployment in MindEase.
 """)
 
-add_code("""# Train Best Model on Full Dataset
+add_code("""# Train Winning Model on Full Dataset
 final_pipeline = models[best_name]
 final_pipeline.fit(X, y)
 
@@ -432,16 +434,30 @@ joblib.dump(le, "models/label_encoder.pkl")
 raw_shap = explainer.shap_values(scaler.transform(X[:2000]))
 shap_dict = {}
 for feat_idx, feat_name in enumerate(FEATURE_COLS):
-    per_class_means = [float(np.abs(raw_shap[cls][:, feat_idx]).mean()) for cls in range(len(raw_shap))]
+    if isinstance(raw_shap, list):
+        per_class_means = [float(np.abs(raw_shap[cls][:, feat_idx]).mean()) for cls in range(len(raw_shap))]
+    else:
+        per_class_means = [float(np.abs(raw_shap[:, feat_idx, cls]).mean()) for cls in range(3)]
     shap_dict[feat_name] = per_class_means
 
 with open("models/shap_feature_importance.json", "w") as f:
     json.dump(shap_dict, f, indent=2)
 
-print("✅ Model artifacts successfully saved to ./models/")
+eval_meta = {
+    "benchmark_results": results,
+    "winning_model": best_name,
+    "winning_accuracy": float(results[best_name]["accuracy"]),
+    "winning_f1": float(results[best_name]["f1_macro"]),
+    "features_count": len(FEATURE_COLS)
+}
+with open("models/evaluation_results.json", "w") as f:
+    json.dump(eval_meta, f, indent=2)
+
+print(f"✅ Model artifacts successfully saved for {best_name} to ./models/")
 print("  - models/best_model.pkl")
 print("  - models/label_encoder.pkl")
 print("  - models/shap_feature_importance.json")
+print("  - models/evaluation_results.json")
 
 # ── Test Live Sample Inference ────────────────────────────────────────────────
 sample_student = X[0].reshape(1, -1)
@@ -449,7 +465,7 @@ probs = final_pipeline.predict_proba(sample_student)[0]
 pred_idx = np.argmax(probs)
 pred_label = le.inverse_transform([pred_idx])[0]
 
-print(f"\\n🧪 Sample Student Live Inference:")
+print(f"\\n🧪 Sample Student Live Inference ({best_name}):")
 print(f"  Predicted Risk Category : {pred_label.upper()}")
 print(f"  Model Confidence        : {probs[pred_idx]*100:.1f}%")
 print(f"  Class Probabilities     : Low={probs[1]*100:.1f}%, Moderate={probs[2]*100:.1f}%, High={probs[0]*100:.1f}%")
