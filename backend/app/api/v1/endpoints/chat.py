@@ -207,6 +207,11 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
             current_state = "background"
             response_state = "consent"
 
+    elif current_state == "cooldown":
+        # Cooldown state: questionnaire is blocked, just chat conversationally
+        response_state = "cooldown"
+        # Keep state as cooldown, don't advance to questionnaire
+
     elif current_state == "background":
         sess.current_state = "phq9"
         current_state = "phq9"
