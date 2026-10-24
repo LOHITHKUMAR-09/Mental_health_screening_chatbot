@@ -1,0 +1,43 @@
+============================================================
+DASS EDA — Personality & VCL Report
+============================================================
+
+  Extraversion: mean=3.47, median=3.50, std=1.56
+
+  Agreeableness: mean=4.54, median=4.50, std=1.23
+
+  Conscientiousness: mean=4.23, median=4.00, std=1.49
+
+  Neuroticism: mean=4.76, median=5.00, std=1.53
+
+  Openness: mean=4.60, median=4.50, std=1.34
+
+── Big Five ↔ DASS Pearson Correlations ─────────────────────────────────
+  Extraversion         × Depression  : r = -0.293  ***
+  Extraversion         × Anxiety     : r = -0.185  ***
+  Extraversion         × Stress      : r = -0.178  ***
+  Agreeableness        × Depression  : r = -0.160  ***
+  Agreeableness        × Anxiety     : r = -0.116  ***
+  Agreeableness        × Stress      : r = -0.198  ***
+  Conscientiousness    × Depression  : r = -0.293  ***
+  Conscientiousness    × Anxiety     : r = -0.230  ***
+  Conscientiousness    × Stress      : r = -0.226  ***
+  Neuroticism          × Depression  : r = +0.521  ***
+  Neuroticism          × Anxiety     : r = +0.531  ***
+  Neuroticism          × Stress      : r = +0.641  ***
+  Openness             × Depression  : r = -0.231  ***
+  Openness             × Anxiety     : r = -0.205  ***
+  Openness             × Stress      : r = -0.196  ***
+
+── VCL Validity Filter ──────────────────────────────────────────────────
+  VCL PASS: 34,583  (86.9%)
+  VCL FAIL: 5,192  (13.1%)
+
+  Depression VCL pass vs fail: U=84961576, p=4.2584e-10 ***
+    Pass mean=41.8  |  Fail mean=44.1
+
+  Anxiety VCL pass vs fail: U=84426684, p=3.9548e-12 ***
+    Pass mean=31.8  |  Fail mean=34.4
+
+  Stress VCL pass vs fail: U=84821427, p=1.3066e-10 ***
+    Pass mean=42.0  |  Fail mean=44.1

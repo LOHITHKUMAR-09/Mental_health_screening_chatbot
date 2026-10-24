@@ -1,0 +1,51 @@
+============================================================
+DASS EDA — ML Readiness Report
+============================================================
+
+  Depression 5-class imbalance ratio: 15.5:1
+    Normal              :  4,318  (10.9%)
+    Mild                :  1,755  (4.4%)
+    Moderate            :  3,698  (9.3%)
+    Severe              :  2,871  (7.2%)
+    Extremely Severe    : 27,133  (68.2%)
+
+  Anxiety 5-class imbalance ratio: 20.6:1
+    Normal              :  4,279  (10.8%)
+    Mild                :  1,323  (3.3%)
+    Moderate            :  4,126  (10.4%)
+    Severe              :  2,764  (6.9%)
+    Extremely Severe    : 27,283  (68.6%)
+
+  Stress 5-class imbalance ratio: 14.1:1
+    Normal              :  4,439  (11.2%)
+    Mild                :  1,813  (4.6%)
+    Moderate            :  3,231  (8.1%)
+    Severe              :  4,756  (12.0%)
+    Extremely Severe    : 25,536  (64.2%)
+
+  Depression binary: Normal=4,318  Elevated=35,457
+
+  Anxiety binary: Normal=4,279  Elevated=35,496
+
+  Stress binary: Normal=4,439  Elevated=35,336
+
+── Data Quality Funnel ─────────────────────────────────────────────────
+  Raw Dataset                   : 39,775  (100.0%)
+  Remove Exact Duplicates       : 39,775  (100.0%)
+  Valid Age (13–100)            : 39,768  (100.0%)
+  VCL Pass (no fake words)      : 34,583  (86.9%)
+  Test Time ≥ 60s               : 39,655  (99.7%)
+  All Filters Combined          : 34,511  (86.8%)
+
+── ML Feature Summary ──────────────────────────────────────────────────
+  Recommended feature set for ML:
+  • 42 DASS-42 item responses (Q1A–Q42A)  — primary predictors
+  • 5 Big Five personality composites (TIPI)
+  • Demographics: age, gender, education, urban, engnat, familysize
+  • Response time features: testelapse, item-level E columns
+  • VCL vocabulary sum (real words only) as engagement proxy
+
+  Recommended label strategies:
+  1. Binary (Normal vs Elevated) — baseline screening model
+  2. 3-class (Normal / Mild-Mod / Severe+) — triage model
+  3. Regression (continuous score) — fine-grained severity model

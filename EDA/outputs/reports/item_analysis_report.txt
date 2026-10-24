@@ -1,0 +1,10 @@
+============================================================
+DASS EDA — Item Analysis Report
+============================================================
+
+── Item–Total Correlations ──────────────────────────────────────────────
+
+── Careless Responding (Long-String Analysis) ───────────────────────────
+  Median longest run : 5
+  Mean longest run   : 6.0
+  ≥10 consecutive same answers: 4,582  (11.52%)
