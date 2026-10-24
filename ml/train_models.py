@@ -111,7 +111,7 @@ for name, pipeline in models.items():
 
 # ── Step 5: Train best model on full data ─────────────────────────
 best_name = max(results, key=lambda k: results[k]["f1_macro"])
-print(f"\n🏆 Best model selected: {best_name} ({results[best_name]['accuracy']*100:.2f}% Accuracy)")
+print(f"\n[BEST] Best model selected: {best_name} ({results[best_name]['accuracy']*100:.2f}% Accuracy)")
 
 best_pipeline = models[best_name]
 best_pipeline.fit(X, y)

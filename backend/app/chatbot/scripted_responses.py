@@ -22,6 +22,42 @@ def is_explicit_refusal(msg_lower: str) -> bool:
     return any(re.search(pat, msg_lower) for pat in refusal_patterns)
 
 
+def is_small_talk_or_greeting(msg_lower: str) -> bool:
+    """Check if user message is small talk, greeting, or casual question."""
+    msg = msg_lower.strip()
+    patterns = [
+        r"how\s+(are|r)\s+(you|u)",
+        r"how\s+do\s+you\s+do",
+        r"how'?s\s+it\s+going",
+        r"how\s+is\s+it\s+going",
+        r"what'?s\s+up",
+        r"\bsup\b",
+        r"\bhello\b",
+        r"\bhi\b",
+        r"\bhlo\b",
+        r"\bhey\b",
+        r"\bheyy\b",
+        r"\bgood\s+(morning|afternoon|evening|day)\b",
+        r"\bwho\s+are\s+you\b",
+        r"\bwhat\s+(is|are)\s+you\b",
+        r"\bwhat\s+is\s+this\b",
+        r"tell\s+me\s+about\s+yourself",
+    ]
+    return any(re.search(pat, msg) for pat in patterns)
+
+
+def is_affirmative_consent(msg_lower: str) -> bool:
+    """Check if user is explicitly agreeing to start/proceed."""
+    msg = msg_lower.strip()
+    affirmatives = [
+        r"\byes\b", r"\byep\b", r"\byeah\b", r"\byup\b", r"\bsure\b",
+        r"\bok\b", r"\bokay\b", r"\bstart\b", r"\bbegin\b", r"\bready\b",
+        r"\bproceed\b", r"\blet'?s\s+go\b", r"\bcontinue\b", r"\bi\s+agree\b",
+        r"\bagreed\b", r"\bi'?m\s+ready\b", r"\bgo\s+ahead\b"
+    ]
+    return any(re.search(pat, msg) for pat in affirmatives)
+
+
 def get_scripted_response(
     current_state: str,
     user_message: str,
@@ -34,40 +70,56 @@ def get_scripted_response(
     """
     msg_lower = user_message.lower().strip()
 
-    if current_state == "greeting":
-        return (
-            "Hello! I'm MindEase, your confidential mental health check-in companion. 💙\n\n"
-            "This is a brief, private screening covering how you've been feeling lately. "
-            "It takes about 8-10 minutes and covers three areas: mood, anxiety, and stress.\n\n"
-            "Before we begin, please note: this is a screening tool only — not a diagnosis. "
-            "Everything you share stays private.\n\n"
-            "Are you ready to begin? (Type 'Yes' to start)"
-        )
-
-    elif current_state in ("consent", "consent_declined"):
+    if current_state in ("greeting", "consent", "consent_declined"):
         if is_explicit_refusal(msg_lower):
             return (
                 "That's completely okay. You can come back whenever you feel ready. "
                 "If you ever need support, remember iCall is always available: 9152987821. 💙"
             )
+
+        if is_small_talk_or_greeting(msg_lower):
+            if "how" in msg_lower:
+                return (
+                    "I'm doing well, thank you for asking! 🌿\n\n"
+                    "I'm MindEase, your confidential mental health check-in companion. "
+                    "I'm here whenever you'd like to do a quick, private check-in covering mood, anxiety, and stress.\n\n"
+                    "Whenever you're ready to begin, simply type **'Yes'** or click **'Start'**!"
+                )
+            else:
+                return (
+                    "Hello! 💙 I'm MindEase, your confidential check-in companion.\n\n"
+                    "I'm here to guide you through a brief, private mental health screening whenever you feel ready.\n\n"
+                    "Would you like to begin? (Type **'Yes'** to start)"
+                )
+
+        if is_affirmative_consent(msg_lower):
+            return (
+                "Thank you for trusting MindEase. 🌿\n\n"
+                "Just a quick note before we start:\n"
+                "• Your responses are private and encrypted\n"
+                "• This is not a diagnostic tool\n"
+                "• If you feel distressed at any point, crisis support is available immediately\n\n"
+                "Let's begin with a few background questions. "
+                "What year of study are you in, and what's been on your mind lately?"
+            )
+
         return (
-            "Thank you for trusting MindEase. 🌿\n\n"
-            "Just a quick note before we start:\n"
-            "• Your responses are private and encrypted\n"
-            "• This is not a diagnostic tool\n"
-            "• If you feel distressed at any point, crisis support is available immediately\n\n"
-            "Let's begin with a few background questions. "
-            "What year of study are you in, and what's been on your mind lately?"
+            "I'm here to support you! 💙 Whenever you'd like to begin your private mental health check-in, "
+            "simply type **'Yes'** or click **'Start'**."
         )
 
     elif current_state == "background":
+        if is_small_talk_or_greeting(msg_lower):
+            return (
+                "I'm doing well, thank you for asking! 💙\n\n"
+                "Before we begin the check-in questions, could you tell me what year of study you're in and how things have been feeling lately?\n\n"
+                "(Or type **'ready'** if you'd like to go straight to the questions!)"
+            )
         return (
             "Thank you for sharing that. It sounds like you're carrying quite a bit right now. "
             "You've taken a positive step just by being here. 🌿\n\n"
-            "We'll now go through some standardised questions to better understand how you've been feeling. "
-            "For each question, I'll give you response options to choose from.\n\n"
-            "Let's start with the first section — about your mood over the last 2 weeks.\n\n"
-            + _ask_pending_item(pending_item)
+            "We'll now begin the assessment questions to better understand how you've been feeling."
+            + (f"\n\n{_ask_pending_item(pending_item)}" if pending_item else "")
         )
 
     elif current_state in ("phq9", "gad7", "pss10"):

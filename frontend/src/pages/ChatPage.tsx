@@ -27,9 +27,7 @@ interface ScreeningResults {
   completed_at?: string  // for previous-session results
 }
 
-interface ResultsCardMessage extends Message {
-  resultsSessionId: string
-}
+
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const SECTION_LABELS: Record<string, string> = {
@@ -411,7 +409,7 @@ export default function ChatPage() {
         setPrevResults(session.previous_results ?? null)
         setCooldownHours(session.cooldown_remaining_hours ?? null)
 
-        const cardMsgId = addBotMessage(
+        addBotMessage(
           `Hello again! 💙 I'm glad you're checking in.\n\nYou recently completed a full mental health screening, so the full questionnaire won't run again yet — this protects the validity of your results.\n\nI can still chat with you, share coping suggestions based on your last results, or answer any questions you have.`
         )
         // Add cooldown card after a small delay so it appears below the bot message
@@ -436,16 +434,19 @@ export default function ChatPage() {
   }
 
   // ── Core send (used by text input + question modal) ───────────────
-  const handleSend = async (customText?: string) => {
+  const handleSend = async (customText?: string, isModalAnswer: boolean = false) => {
     const textToSend = (customText ?? inputText).trim()
     if (!textToSend || !sessionId || isTyping) return
 
-    setMessages(prev => [...prev, {
-      id: crypto.randomUUID(),
-      sender: 'user',
-      content: textToSend,
-      timestamp: new Date(),
-    }])
+    // Only render user message if it is conversational (not questionnaire scale answers)
+    if (!isModalAnswer) {
+      setMessages(prev => [...prev, {
+        id: crypto.randomUUID(),
+        sender: 'user',
+        content: textToSend,
+        timestamp: new Date(),
+      }])
+    }
     if (!customText) setInputText('')
     setIsTyping(true)
     setError(null)
@@ -458,12 +459,12 @@ export default function ChatPage() {
       if (response.is_crisis || response.isCrisis) {
         setIsCrisis(true)
         setActiveQuestion(null)
+        const botMsg = response.bot_message || response.botMessage || 'Please reach out for help.'
+        addBotMessage(botMsg)
+        return
       }
 
-      const botMsg = response.bot_message || response.botMessage || 'Thank you.'
-      const newMsgId = addBotMessage(botMsg)
-
-      // Open questionnaire modal for next question
+      // Set active question in popup modal
       const item = response.questionnaire_item ?? response.questionnaireItem
       if (item && !response.is_crisis) {
         setActiveQuestion(item as PendingQuestion)
@@ -471,16 +472,22 @@ export default function ChatPage() {
         setActiveQuestion(null)
       }
 
-      // Screening complete → fetch results, embed card in chat, show modal, stay on chat
+      // When screening complete: display ONLY ONE message referring to results
       if (state === 'results' || response.screening_complete || response.screeningComplete) {
         setActiveQuestion(null)
+        const completionMsg = "🌿 Screening Complete!\n\nWell done for completing the check-in. Your responses across depression (PHQ-9), anxiety (GAD-7), and stress (PSS-10) have been analysed, and your personalised risk assessment is ready below:"
+        const newMsgId = addBotMessage(completionMsg)
+
         if (sessionId) {
           await loadAndShowResults(sessionId, newMsgId)
-          // Mark session complete on backend
           try {
             await fetch(`http://localhost:8000/api/v1/sessions/${sessionId}/complete`, { method: 'POST' })
           } catch {}
         }
+      } else if (!isModalAnswer) {
+        // Conversational message (greeting, consent, background) — show bot reply in chat
+        const botMsg = response.bot_message || response.botMessage || 'Thank you.'
+        addBotMessage(botMsg)
       }
     } catch (err: any) {
       const msg = err?.response?.data?.detail || err?.message || 'Something went wrong.'
@@ -494,8 +501,7 @@ export default function ChatPage() {
 
   const handleModalAnswer = (value: number) => {
     setIsModalSubmitting(true)
-    setActiveQuestion(null)
-    handleSend(String(value))
+    handleSend(String(value), true)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -1,5 +1,6 @@
-﻿import sys
-sys.path.insert(0, r"C:\Users\cheru\Documents\Projects\ML_Mental_Health_Screening\backend")
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 print("=== BACKEND IMPORT CHECK ===")
 modules = [
