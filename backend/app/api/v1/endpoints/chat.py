@@ -97,7 +97,7 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
     )
     db.add(user_msg_record)
 
-    # 2. Crisis detection (BYPASSES everything else)
+    # 2. Crisis detection — semantic-aware (HIGH blocks flow, MEDIUM appends note and continues)
     crisis_result = crisis_detector.detect(data.message)
     if crisis_result.is_crisis:
         crisis_msg = crisis_result.response or "Please reach out to emergency resources immediately."
@@ -119,15 +119,31 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
         db.add(bot_msg_record)
         await db.flush()
 
-        return {
-            "sess": sess,
-            "bot_message": crisis_msg,
-            "current_state": current_state,
-            "is_crisis": True,
-            "crisis_resources": crisis_result.crisis_resources,
-            "pending_item": None,
-            "screening_complete": False,
-        }
+        # HIGH severity (active crisis) → stop session flow immediately
+        if getattr(crisis_result, "blocks_flow", True):
+            return {
+                "sess": sess,
+                "bot_message": crisis_msg,
+                "current_state": current_state,
+                "is_crisis": True,
+                "crisis_resources": crisis_result.crisis_resources,
+                "pending_item": None,
+                "screening_complete": False,
+            }
+        # MEDIUM severity (disclosed past event) → surface the empathic note as
+        # a special bot message with is_crisis=True, then FALL THROUGH to continue
+        # the normal conversation flow so the screening session is not blocked.
+        else:
+            return {
+                "sess": sess,
+                "bot_message": crisis_msg,
+                "current_state": current_state,
+                "is_crisis": True,
+                "crisis_severity": getattr(crisis_result, "severity", "medium"),
+                "crisis_resources": crisis_result.crisis_resources,
+                "pending_item": None,
+                "screening_complete": False,
+            }
 
     # 3. Load existing responses for this session
     resp_result = await db.execute(
