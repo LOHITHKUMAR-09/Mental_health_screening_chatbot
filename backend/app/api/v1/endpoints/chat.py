@@ -88,14 +88,16 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
 
     current_state = sess.current_state
 
-    # Save user message
-    user_msg_record = ChatMessage(
-        session_id=sess.id,
-        sender="user",
-        content=data.message,
-        state=current_state,
-    )
-    db.add(user_msg_record)
+    # Save user message (skip saving raw Likert scale questionnaire numbers into chat messages)
+    is_questionnaire_input = current_state in ("phq9", "gad7", "pss10")
+    if not is_questionnaire_input:
+        user_msg_record = ChatMessage(
+            session_id=sess.id,
+            sender="user",
+            content=data.message,
+            state=current_state,
+        )
+        db.add(user_msg_record)
 
     # 2. Crisis detection — semantic-aware (HIGH blocks flow, MEDIUM appends note and continues)
     crisis_result = crisis_detector.detect(data.message)
@@ -188,23 +190,26 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
             else:
                 clarification_needed = True
 
-    # 5. Non-questionnaire state transitions
+    # 5. Non-questionnaire state transitions (semantic LLM intent classification)
+    from app.chatbot.conversation_engine import get_conversation_engine
+    engine = get_conversation_engine()
     response_state = current_state
+
     if current_state in ("phq9", "gad7", "pss10"):
         pass  # Handled above
-    elif current_state == "greeting":
-        sess.current_state = "consent"
-        response_state = "greeting"
-
-    elif current_state == "consent":
-        from app.chatbot.scripted_responses import is_explicit_refusal
-        msg_lower = data.message.lower().strip()
-        if is_explicit_refusal(msg_lower):
+    elif current_state in ("greeting", "consent"):
+        intent = await engine.classify_intent(data.message, current_state)
+        if intent == "consent":
+            sess.current_state = "background"
+            current_state = "background"
+            response_state = "consent"
+        elif intent == "refusal":
             sess.current_state = "consent"
             response_state = "consent_declined"
         else:
-            sess.current_state = "background"
-            current_state = "background"
+            # "chat" — user asked "how are you", said hello, asked a question, etc.
+            # Stay in consent, let the LLM answer naturally!
+            sess.current_state = "consent"
             response_state = "consent"
 
     elif current_state == "cooldown":
@@ -213,35 +218,34 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
         # Keep state as cooldown, don't advance to questionnaire
 
     elif current_state == "background":
-        sess.current_state = "phq9"
-        current_state = "phq9"
-        pending_item = get_next_question("phq9", {})
-        response_state = "background"
+        intent = await engine.classify_intent(data.message, "background")
+        if intent == "chat":
+            # User chatted or asked how the bot is — stay in background, let LLM answer!
+            sess.current_state = "background"
+            response_state = "background"
+        else:
+            # User provided background information or said ready/start
+            sess.current_state = "phq9"
+            current_state = "phq9"
+            pending_item = get_next_question("phq9", {})
+            response_state = "background"
 
     if current_state == "results" and not sess.is_complete:
         sess.is_complete = True
 
-    # 6. Generate bot response
-    if clarification_needed and pending_item:
-        bot_message = get_clarification_response(pending_item)
-    elif current_state in ("phq9", "gad7", "pss10") and pending_item:
-        # Clinical questionnaire states: ALWAYS deliver exact, authoritative question text & Likert scale
-        bot_message = get_scripted_response(
-            current_state=current_state,
-            user_message=data.message,
-            responses=all_responses,
-            pending_item=pending_item,
-        )
-    else:
-        # Conversational states (greeting, consent, background, results): use empathic LLM
-        bot_message = await _get_llm_response(
-            user_message=data.message,
-            history=data.conversation_history or [],
-            state=current_state,
-            responses=all_responses,
-            pending_item=pending_item,
-        )
-        if not bot_message:
+    # 6. Generate bot response ALWAYS via the LLM for rich conversational empathy
+    bot_message = await engine.generate_response(
+        user_message=data.message,
+        conversation_history=data.conversation_history or [],
+        current_state=current_state,
+        responses=all_responses,
+        pending_item=pending_item,
+    )
+    if not bot_message:
+        # Fallback only if LLM call physically fails or times out
+        if clarification_needed and pending_item:
+            bot_message = get_clarification_response(pending_item)
+        else:
             bot_message = get_scripted_response(
                 current_state=response_state,
                 user_message=data.message,
@@ -252,14 +256,16 @@ async def process_chat_message(data: ChatMessageRequest, db: AsyncSession):
     if not bot_message:
         bot_message = "Thank you for your response."
 
-    # Save bot message to DB
-    bot_msg_record = ChatMessage(
-        session_id=sess.id,
-        sender="bot",
-        content=bot_message,
-        state=current_state,
-    )
-    db.add(bot_msg_record)
+    # Save bot message to DB (do not clutter chat history with intermediate questionnaire prompts)
+    is_intermediate_question = current_state in ("phq9", "gad7", "pss10") and pending_item is not None
+    if not is_intermediate_question:
+        bot_msg_record = ChatMessage(
+            session_id=sess.id,
+            sender="bot",
+            content=bot_message,
+            state=current_state,
+        )
+        db.add(bot_msg_record)
     await db.flush()
 
     return {

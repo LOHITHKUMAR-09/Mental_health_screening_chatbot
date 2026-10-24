@@ -27,11 +27,11 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     # LLM
-    LLM_PROVIDER: str = "openai"
+    LLM_PROVIDER: str = "groq"
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-4o"
     GROQ_API_KEY: str = ""
-    GROQ_MODEL: str = "openai/gpt-oss-20b"
+    GROQ_MODEL: str = "qwen/qwen3.8-27b"
     LLM_TEMPERATURE: float = 0.5
     LLM_MAX_TOKENS: int = 512
 

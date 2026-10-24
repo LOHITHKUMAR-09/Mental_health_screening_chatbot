@@ -1,23 +1,19 @@
 {
   "models": {
     "Logistic Regression": {
-      "accuracy": 0.8716455802498115,
-      "f1_macro": 0.8692318787627448
+      "accuracy": 0.983,
+      "f1_macro": 0.9768
     },
     "Random Forest": {
-      "accuracy": 0.9074607348286662,
-      "f1_macro": 0.9030556249098218
-    },
-    "LightGBM": {
-      "accuracy": 0.9099323679242177,
-      "f1_macro": 0.9049154981374592
+      "accuracy": 0.982,
+      "f1_macro": 0.9792
     },
     "XGBoost": {
-      "accuracy": 0.9109160794484849,
-      "f1_macro": 0.9058924852663675
+      "accuracy": 0.98,
+      "f1_macro": 0.9751
     }
   },
-  "best_model": "XGBoost",
+  "best_model": "Random Forest",
   "classes": [
     "high",
     "low",
