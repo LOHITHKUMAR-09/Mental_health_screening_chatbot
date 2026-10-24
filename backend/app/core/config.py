@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     ICALL_HELPLINE: str = "9152987821"
     VANDREVALA_HELPLINE: str = "1860-2662-345"
 
+    # Questionnaire cooldown — minimum hours between full screenings
+    QUESTIONNAIRE_COOLDOWN_HOURS: int = 24
+
     # CORS
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:5173"]
 
